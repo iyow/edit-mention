@@ -10,7 +10,7 @@ class MentionTag {
         MarkChar = '',
         tagClass = '',
         targetNode,
-        customInsertFunc = () => { },
+        customInsertFunc,
         PopoverInstance,
         beforeInsertEvent = _ => true
     }) {
@@ -46,23 +46,29 @@ class MentionTag {
         //            参数： tagText插入标签的显示文字，tagid插入标签的自定义属性用于存储数据, insertCustomPositionFun 自定义插入位置,默认光背位置插入无光标插入末尾
         this.PopoverInstance = PopoverInstance
 
+        // bind this  解决 无法remove 事件问题
+        this.targetEventList = new Map([
+            ['input', this.inputEvent.bind(this)],
+            ['keyup', this.keyupEvent.bind(this)],
+            ['keydown', this.keydownEvent.bind(this)],
+            ['click', this.emitSearch.bind(this)]
+        ])
+        this.insertEvent = this.insertEvent.bind(this)
+
         this._init()
     }
     _init() { }
     bindEvent() {
-        this.target.addEventListener('input', this.inputEvent.bind(this))
-        this.target.addEventListener('keyup', this.keyupEvent.bind(this))
-        this.target.addEventListener('keydown', this.keydownEvent.bind(this))
-        this.target.addEventListener('click', this.emitSearch.bind(this))
-        // 标签插入  --- 通信接口  会删除 光标前替换字符  若需要直接插入 可直接调用 insert函数
-        this.PopoverInstance.getElement().addEventListener('@MT::insert', (e) => {
-            // 触发删除 光标前替换字符
-            let data = e.detail
-            if (this.beforeInsertEvent(data)) {
-                this.deleteSearchPlaceHolder()
-                this.insert(data)
-            }
+        this.targetEventList.forEach((callback, eventType) => {
+            this.target.addEventListener(eventType, callback)
         })
+        this.PopoverInstance.getElement().addEventListener('@DT::insert', this.insertEvent)
+    }
+    destroy() {
+        this.targetEventList.forEach((callback, eventType) => {
+            this.target.removeEventListener(eventType, callback)
+        })
+        this.PopoverInstance.getElement().removeEventListener('@DT::insert', this.insertEvent)
     }
     inputEvent(e) {
         let inputData = e.data
@@ -109,6 +115,16 @@ class MentionTag {
                     })
                     break
             }
+        }
+    }
+    insertEvent(e) {
+        let data = e.detail
+        if (this.beforeInsertEvent(data)) {
+            // 触发删除 光标前替换字符
+            this.deleteSearchPlaceHolder()
+            this.insert(data)
+        } else {
+            this.target.focus()
         }
     }
     emitSearch(data = {}) {
@@ -196,6 +212,7 @@ class MentionTag {
             // tag.insertAdjacentText('beforebegin', ' ')
             // tag.insertAdjacentText('afterend', ' ')
         }
+        this.target.focus()
     }
     // 进行TextNode截断及获取位置
     setCursorPosition() {
