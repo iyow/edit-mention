@@ -6,14 +6,15 @@ import Vue from 'vue'
 import AtPropoverList from '../mention-pop/test/at-popover-list.vue'
 import MentionTag from '../mention-tag/src/mention-tag'
 
+// 只生成一次实例
+let instance = new (Vue.extend(AtPropoverList))({
+    data: {
+        list: ['asd', 'bsd', 'qwe'],
+        defaultAvatar: DefaultAvatar
+    }
+})
+document.body.appendChild(instance.$mount().$el)
 export default function atInit(target, componentThis) {
-    let instance = new (Vue.extend(AtPropoverList))({
-        data: {
-            list: ['asd', 'bsd', 'qwe'],
-            defaultAvatar: DefaultAvatar
-        }
-    })
-    document.body.appendChild(instance.$mount().$el)
     console.log('------------AT挂载成功')
     let at = new MentionTag({
         MarkChar: '@',
@@ -30,7 +31,6 @@ export default function atInit(target, componentThis) {
                 tag.insertAdjacentText('beforebegin', ' ')
                 tag.insertAdjacentText('afterend', ' ')
             }
-            // target.focus()
         },
         beforeInsertEvent: function ({
             tagid
