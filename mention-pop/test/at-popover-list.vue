@@ -6,6 +6,7 @@
         v-for="(item,index) in showList"
         :key="index"
         :class="{'active':selectIndex===index}"
+        @click="emitInsert(item)"
       >
         <img class="img" :src="item.headUrl||defaultAvatar" alt="头像" />
         <span class="name">{{item.name}}</span>
@@ -33,10 +34,15 @@ export default {
     }
   },
   methods: {
+    show() {
+      this.visible = true;
+      this.listScrollToView();
+    },
+    hide() {
+      this.visible = false;
+    },
     search(e) {
       this.selectIndex = 0;
-      this.listScrollToView();
-
       let {
         inputData,
         cursorPosition,
@@ -51,8 +57,8 @@ export default {
       let shouldShowAndSearch = hasAT;
       let showHide = !hasAT && this.visible === true;
       if (shouldShowAndSearch) {
-        this.visible = true;
-        this.showList = this.search(betweenMarkAndCaretStr, this.list);
+        this.show();
+        this.showList = this.searchList(betweenMarkAndCaretStr, this.list);
         this.$nextTick(() => {
           let dom = this.getElement();
           let arrowOffset = 15 + 8;
@@ -61,8 +67,12 @@ export default {
           dom.style.left = cursorPosition.x - dom.offsetWidth / 2 + "px";
         });
       } else if (showHide) {
-        this.visible = false;
+        this.hide();
       }
+    },
+    searchList(searchParams, list) {
+      // dosomthing
+      return list;
     },
     getElement() {
       return this.$el;
@@ -73,8 +83,21 @@ export default {
           ".at-popover-list .at-line.active"
         );
         // currentItem && currentItem.scrollIntoView(true)
-        currentItem && currentItem.scrollIntoView(false);
+        // currentItem && currentItem.scrollIntoView(false)
+        currentItem &&
+          currentItem.scrollIntoView({
+            behavior: "instant",
+            block: "center",
+            inline: "nearest"
+          });
       });
+    },
+    customEmit(event, data) {
+      let e = new CustomEvent(`@DT::${event}`, { detail: data });
+      this.getElement().dispatchEvent(e);
+    },
+    emitInsert(item) {
+      this.customEmit("insert", { tagText: item.showText, tagid: item.id });
     },
     selectUp() {
       let isTop = this.selectIndex === 0;
@@ -93,6 +116,12 @@ export default {
         this.selectIndex++;
       }
       this.listScrollToView();
+    },
+    enterInsert() {
+      if (this.isShow) {
+        let item = this.getSelectedInfo();
+        this.customEmit("insert", { tagText: item.showText, tagid: item.id });
+      }
     }
   },
   mounted() {
@@ -100,13 +129,23 @@ export default {
       let { inputData, event } = e.detail;
       if (this.isShow) {
         event.preventDefault();
-        inputData === "ArrowUp" && this.selectUp();
-        inputData === "ArrowDown" && this.selectDown();
+        switch (inputData) {
+          case "ArrowUp":
+            this.selectUp();
+            break;
+          case "ArrowDown":
+            this.selectDown();
+            break;
+          case "Enter":
+            this.enterInsert();
+            break;
+        }
       }
     };
     this.getElement().addEventListener("@DT::search", this.search.bind(this));
     this.getElement().addEventListener("@DT::selectUp", selectWrap);
     this.getElement().addEventListener("@DT::selectDown", selectWrap);
+    this.getElement().addEventListener("@DT::enter", selectWrap);
   }
 };
 </script>
