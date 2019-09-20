@@ -45,32 +45,26 @@ class MentionTag {
         //      - @MT::insert  弹出框实例  通知 插件内部 需要插入 标签 ，
         //            参数： tagText插入标签的显示文字，tagid插入标签的自定义属性用于存储数据, insertCustomPositionFun 自定义插入位置,默认光背位置插入无光标插入末尾
         this.PopoverInstance = PopoverInstance
-
-        // bind this  解决 无法remove 事件问题
-        this.targetEventList = new Map([
-            ['input', this.inputEvent.bind(this)],
-            ['keyup', this.keyupEvent.bind(this)],
-            ['keydown', this.keydownEvent.bind(this)],
-            ['click', this.emitSearch.bind(this)]
-        ])
-        this.insertEvent = this.insertEvent.bind(this)
-
         this._init()
     }
     _init() { }
-    bindEvent() {
-        this.targetEventList.forEach((callback, eventType) => {
-            this.target.addEventListener(eventType, callback)
-        })
-        this.PopoverInstance.getElement().addEventListener('@DT::insert', this.insertEvent)
-    }
-    destroy() {
-        this.targetEventList.forEach((callback, eventType) => {
-            this.target.removeEventListener(eventType, callback)
-        })
+    _destroy() {
+        this.target.removeEventListener('input', this.inputEvent)
+        this.target.removeEventListener('keyup', this.keyupEvent)
+        this.target.removeEventListener('keydown', this.keydownEvent)
+        this.target.removeEventListener('click', this.emitSearch)
         this.PopoverInstance.getElement().removeEventListener('@DT::insert', this.insertEvent)
     }
-    inputEvent(e) {
+    bindEvent() {
+        this.target.addEventListener('input', this.inputEvent)
+        this.target.addEventListener('keyup', this.keyupEvent)
+        this.target.addEventListener('keydown', this.keydownEvent)
+        this.target.addEventListener('click', this.emitSearch)
+        this.PopoverInstance.getElement().addEventListener('@DT::insert', this.insertEvent)
+    }
+
+    // ----------Dom事件回调----------START
+    inputEvent = function (e) {
         let inputData = e.data
         let isMarkChar = e.data === this.MarkChar
         let hasMarkChar = this.target.innerHTML.includes(this.MarkChar)
@@ -80,8 +74,8 @@ class MentionTag {
                 inputData
             })
         }
-    }
-    keyupEvent(e) {
+    }.bind(this)
+    keyupEvent = function (e) {
         // 左右移动需要监听  keyup  若监听keydown  截取的字符串片段是 光标移动之前的
         // 37左-38上-39右-40下
         if (e.keyCode === 37 || e.keyCode === 39) {
@@ -90,8 +84,8 @@ class MentionTag {
                 inputData: e.key
             })
         }
-    }
-    keydownEvent(e) {
+    }.bind(this)
+    keydownEvent = function (e) {
         // 上下需要监听keydown 防止多行上下移动
         if (this.PopoverInstance.isShow()) {
             e.preventDefault()
@@ -116,8 +110,8 @@ class MentionTag {
                     break
             }
         }
-    }
-    insertEvent(e) {
+    }.bind(this)
+    insertEvent = function (e) {
         let data = e.detail
         if (this.beforeInsertEvent(data)) {
             // 触发删除 光标前替换字符
@@ -126,8 +120,8 @@ class MentionTag {
         } else {
             this.target.focus()
         }
-    }
-    emitSearch(data = {}) {
+    }.bind(this)
+    emitSearch = function (data = {}) {
         // 当前输入的字符
         let {
             inputData = ''
@@ -156,7 +150,9 @@ class MentionTag {
             beforeCaretStr,
             betweenMarkAndCaretStr
         }
-    }
+    }.bind(this)
+    // ----------Dom事件回调----------END
+
     emitEvent(name, detail = {}) {
         let event = new CustomEvent(`@MT::${name}`, {
             'detail': Object.assign(detail, {
