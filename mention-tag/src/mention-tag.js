@@ -54,6 +54,7 @@ class MentionTag {
         this.target.removeEventListener('keydown', this.keydownEvent)
         this.target.removeEventListener('click', this.emitSearch)
         this.PopoverInstance.getElement().removeEventListener('@DT::insert', this.insertEvent)
+        this.PopoverInstance.hide()
     }
     bindEvent() {
         this.target.addEventListener('input', this.inputEvent)
@@ -123,9 +124,7 @@ class MentionTag {
     }.bind(this)
     emitSearch = function (data = {}) {
         // 当前输入的字符
-        let {
-            inputData = ''
-        } = data
+        let { inputData = '' } = data
         let selection = window.getSelection()
         // 光标前所有字符
         let beforeCaretStr = ''
@@ -138,18 +137,10 @@ class MentionTag {
             // 但输入时 锚点(anchor)和焦点(focus)是在同一个位置
             beforeCaretStr = selection.anchorNode.data.slice(0, selection.anchorOffset)
             // 截取@后面的字符传
-            betweenMarkAndCaretStr = selection.anchorNode.data.includes('@') && selection.anchorNode.data.slice(selection.anchorNode.data.lastIndexOf('@') + 1, selection.anchorOffset)
+            betweenMarkAndCaretStr = beforeCaretStr.includes('@') && beforeCaretStr.slice(beforeCaretStr.lastIndexOf('@') + 1, selection.anchorOffset)
         }
-        this.emitEvent('search', {
-            inputData,
-            cursorPosition: this.cursorPos,
-            betweenMarkAndCaretStr,
-            beforeCaretStr
-        })
-        return {
-            beforeCaretStr,
-            betweenMarkAndCaretStr
-        }
+        this.emitEvent('search', { inputData, cursorPosition: this.cursorPos, betweenMarkAndCaretStr, beforeCaretStr })
+        return { beforeCaretStr, betweenMarkAndCaretStr }
     }.bind(this)
     // ----------Dom事件回调----------END
 
@@ -164,12 +155,13 @@ class MentionTag {
     // 删除 用于搜索的 部分字符
     deleteSearchPlaceHolder() {
         let selection = window.getSelection()
-        let searchNode = selection.anchorNode
+        let searchNodeS = selection.anchorNode
+        let searchNodeString = selection.anchorNode.data.slice(0, selection.anchorOffset)
         let searchRange = new Range()
-        searchRange.setStart(searchNode, searchNode.textContent.lastIndexOf('@'))
-        searchRange.setEnd(searchNode, searchNode.textContent.length)
+        searchRange.setStart(searchNodeS, searchNodeString.lastIndexOf('@'))
+        searchRange.setEnd(selection.focusNode, selection.focusOffset)
         searchRange.deleteContents()
-    }
+      }
     // 直接在光标处或者自定义位置插入不可删除节点
     insert(params) {
         // 触发隐藏PopoverList
