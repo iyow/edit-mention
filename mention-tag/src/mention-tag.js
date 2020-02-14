@@ -137,7 +137,7 @@ class MentionTag {
             // 但输入时 锚点(anchor)和焦点(focus)是在同一个位置
             beforeCaretStr = selection.anchorNode.data.slice(0, selection.anchorOffset)
             // 截取@后面的字符传
-            betweenMarkAndCaretStr = beforeCaretStr.includes('@') && beforeCaretStr.slice(beforeCaretStr.lastIndexOf('@') + 1, selection.anchorOffset)
+            betweenMarkAndCaretStr = beforeCaretStr.includes(this.MarkChar) && beforeCaretStr.slice(beforeCaretStr.lastIndexOf(this.MarkChar) + 1, selection.anchorOffset)
         }
         this.emitEvent('search', { inputData, cursorPosition: this.cursorPos, betweenMarkAndCaretStr, beforeCaretStr })
         return { beforeCaretStr, betweenMarkAndCaretStr }
@@ -158,7 +158,7 @@ class MentionTag {
         let searchNodeS = selection.anchorNode
         let searchNodeString = selection.anchorNode.data.slice(0, selection.anchorOffset)
         let searchRange = new Range()
-        searchRange.setStart(searchNodeS, searchNodeString.lastIndexOf('@'))
+        searchRange.setStart(searchNodeS, searchNodeString.lastIndexOf(this.MarkChar))
         searchRange.setEnd(selection.focusNode, selection.focusOffset)
         searchRange.deleteContents()
       }
