@@ -1,7 +1,10 @@
 # edit-mention
-> If you're looking for a complete solution，It is recommended that you can try to use the [draft-js](https://github.com/facebook/draft-js) and its plug-in system [draft-js-plugins](https://github.com/draft-js-plugins/draft-js-plugins)(about mention module).
+> If you're looking for a complete solution，It is recommended that you can try to use the [draft-js](https://github.com/facebook/draft-js) and its plug-in system [draft-js-plugins](https://github.com/draft-js-plugins/draft-js-plugins)(about mention module).]
+## 总体设计
 
-## 整体思路
+![整体架构图](./overall-structural-design.png)
+
+## 标签插入整体思路
 
 ![整体思路图](./overall_thinking.jpg)
 
